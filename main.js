@@ -4,11 +4,30 @@ REACT_APP_SANITY_KEY = "";
 
 let poems = document.getElementById("poems");
 
-poems.textContent = String.toString(fetchInformation())
+info = fetchInformation();
+
+poetry = info.poems.join("\n");
+
+poems.textContent = poetry;
+
+
+hughTurn = info.hughTurn
+
+if (hughTurn) {
+
+    let email = info.hughEmail;
+
+} else {
+
+    let email = info.genEmail;
+
+}
 
 function send() {
     
     let input = document.getElementById("poemInput");
+    
+    let newPoem = input.textContent;
     // TO DO
 
 }
