@@ -3,33 +3,67 @@ REACT_APP_SANITY_DATASET = "production";
 REACT_APP_SANITY_KEY = "skZGcWKz3QVNPsLJRwiPiWqY3132gpszKCJWetryFeAc0BfHIkrlL5hQmDMoWjAlNuiBoTLwvKYg1kyNsCwkdGHqIU18t0WT7D1o8gEBYHnIIdMIAj8gLMzaJwgEQ65ZvXIN52ws8mbnXBZkzhWCemokGVe2DCVzMzLazaYe1V4Pywsy3eQH";
 
 let poems = document.getElementById("poems");
+let turn = document.getElementById("turn");
+let sendEmailObject = document.getElementById("sendEmail");
 
-info = fetchInformation();
+let hughTurn;
+let curEmail;
+let nextEmail;
 
-poetry = info.poems.join("\n");
+startUp();
 
-console.log(poetry);
+// ADD CHECK TO SEE IF WEEK HAS PASSED
 
-poems.textContent = poetry;
+async function startUp() {
 
+    info = await fetchInformation();
 
-hughTurn = info.hughTurn
+    // Get poetry
+    poetry = info.poems.join("\n\n");
 
-if (hughTurn) {
+    poems.textContent = poetry;
 
-    let email = info.hughEmail;
+    console.log(info);
 
-} else {
+    // Set up email
+    hughTurn = info.hughTurn
 
-    let email = info.genEmail;
+    if (hughTurn) {
+
+        turn.textContent = "Hugh's Turn";
+
+        // Says gem instead of gen due to type too lazy to fix
+        curEmail = info.hughEmail;
+        nextEmail = info.gemEmail;
+
+    } else {
+
+        turn.textContent = "Genesis' Turn";
+
+        // Says gem instead of gen due to type too lazy to fix
+        curEmail = info.gemEmail;
+        nextEmail = info.hughEmail;
+
+    }
 
 }
 
-function send() {
+async function send() {
     
     let input = document.getElementById("poemInput");
     
-    let newPoem = input.textContent;
+    let newPoem = input.value;
+
+    let name;
+    if (hughTurn) {
+
+        name = "H";
+
+    } else {
+
+        name = "G";
+
+    }
 
     let mutation = { 
         "mutations": [
@@ -37,16 +71,43 @@ function send() {
               "id": "ad12d038-c1e8-4e0a-82a2-76b6d3cbf79b",
               "insert": {
                 "after": "poems[-1]",
-                "items": [newPoem]
+                "items": [name + ":\n" + newPoem]
+              },
+              "set": {
+                "hughTurn": !hughTurn
               }
           }}
         ]
-      }
+      };
     
 
-    mutate(mutation)
+    await mutate(mutation);
 
-    // TO DO ADD EMAIL AND CHECKING FOR WEEK
+    console.log(nextEmail);
+
+    //await sendEmail(nextEmail);
+    sendEmailObject.href = "mailto:" + nextEmail + "?subject=Your Turn for Poetry&body=https://hughmcwjr.github.io/poeticConversation/";
+    sendEmailObject.click();
+
+    location.reload();
+
+}
+
+async function sendEmail(email) {
+
+    /*Email.send({
+        Host: "smtp.gmail.com",
+        Username: "dummypoeticconversation@gmail.com",
+        Password: "1237?!23.ALP",
+        To: email,
+        From: "dummypoeticconversation@gmail.com",
+        Subject: "Your Turn for Poetry",
+        Body: "https://hughmcwjr.github.io/poeticConversation/",
+      })*/
+
+    // REPLACE WITH REST API GOOGLE
+
+    //document.write(" <?php to = '" + email + "'; subject = 'Your Turn for Poetry'; message = 'https://hughmcwjr.github.io/poeticConversation/'; mail($to, $subject, $message, [$headers], [$parameters]);?> ");
 
 }
 
@@ -54,8 +115,6 @@ async function fetchFromSanityWithQuery(query) {
 
     // Compose the URL for your project's endpoint and add the query
     let URL = `https://${REACT_APP_SANITY_PROJECT_ID}.api.sanity.io/v2021-10-21/data/query/${REACT_APP_SANITY_DATASET}?query=${query}`;
-
-    console.log(URL);
 
     // fetch the content
     return await fetch(URL)
@@ -68,13 +127,11 @@ async function fetchInformation() {
 
     const { result } = await fetchFromSanityWithQuery("*");
 
-    console.log(result);
-
     return result[0];
 
 }
 
-export async function mutate(mutations) {
+async function mutate(mutations) {
     const result = await fetch(
       `https://${REACT_APP_SANITY_PROJECT_ID}.api.sanity.io/v2021-06-07/data/mutate/${REACT_APP_SANITY_DATASET}`,
       {
