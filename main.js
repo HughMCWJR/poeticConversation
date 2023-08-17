@@ -13,6 +13,7 @@ let nextEmail;
 startUp();
 
 // ADD CHECK TO SEE IF WEEK HAS PASSED
+// USE UPTIMEROBOT
 
 async function startUp() {
 
